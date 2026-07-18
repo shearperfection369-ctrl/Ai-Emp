@@ -51,16 +51,18 @@ class TestCatalog:
         r = http.get(f"{API}/tools", timeout=10)
         assert r.status_code == 200
         data = r.json()
-        assert isinstance(data, list) and len(data) == 18
+        assert isinstance(data, list) and len(data) >= 18
         assert all("slug" in t and "price" in t and "category" in t for t in data)
 
     def test_categories(self, http):
         r = http.get(f"{API}/categories", timeout=10)
         assert r.status_code == 200
         data = r.json()
-        assert len(data) == 12
+        assert len(data) >= 12
         assert all("id" in c and "count" in c for c in data)
-        assert sum(c["count"] for c in data) == 18
+        # totals-across-categories should equal total tools returned
+        tools = http.get(f"{API}/tools", timeout=10).json()
+        assert sum(c["count"] for c in data) == len(tools)
 
     def test_category_filter(self, http):
         r = http.get(f"{API}/tools?category=marketing", timeout=10)
@@ -254,7 +256,7 @@ class TestAdmin:
         for key in ("total_revenue", "total_orders", "total_users", "total_tools",
                     "aov", "revenue_series", "top_tools"):
             assert key in d
-        assert d["total_tools"] == 18
+        assert d["total_tools"] >= 18
 
     def test_orders_requires_admin(self):
         r = requests.get(f"{API}/admin/orders", timeout=10)

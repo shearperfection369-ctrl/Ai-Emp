@@ -85,7 +85,8 @@ class TestTiers:
         r = http.get(f"{API}/tools", timeout=10)
         assert r.status_code == 200
         data = r.json()
-        assert len(data) == 18
+        # Iteration 3: catalog expanded to 65 tools; keep this test forward-compatible
+        assert len(data) >= 18
         for t in data:
             assert t.get("tier") in ("Bronze", "Silver", "Gold"), f"missing tier on {t['slug']}"
             assert t.get("speed") in ("Instant", "Fast", "Deep")

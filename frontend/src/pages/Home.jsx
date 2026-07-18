@@ -3,13 +3,13 @@ import { Link } from "react-router-dom";
 import api from "../lib/api";
 import { Icon } from "../lib/icons";
 import ToolCard from "../components/ToolCard";
-import { ArrowRight, Cpu, ShieldCheck, Zap, Rocket, Bot } from "lucide-react";
+import { ArrowRight, Cpu, ShieldCheck, Zap, Rocket, Bot, Coffee, Clock, PiggyBank, Smile } from "lucide-react";
 
 const HERO_BG = "https://images.unsplash.com/photo-1768329051020-489b1bc3f507?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHw0fHxzY2klMjBmaSUyMGRlZXAlMjBzcGFjZSUyMHN0YXJzJTIwaW50ZXJzdGVsbGFyfGVufDB8fHx8MTc4NDM5OTA3N3ww&ixlib=rb-4.1.0&q=85";
 
 const STATS = [
-  { label: "AI TOOLS DEPLOYED", value: "18+" },
-  { label: "INDUSTRIES COVERED", value: "12" },
+  { label: "AI TOOLS DEPLOYED", value: "65+" },
+  { label: "INDUSTRIES COVERED", value: "30+" },
   { label: "OPERATORS ARMED", value: "220K+" },
   { label: "UPTIME", value: "99.9%" },
 ];
@@ -24,10 +24,12 @@ const FEATURES = [
 export default function Home() {
   const [featured, setFeatured] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [everyday, setEveryday] = useState([]);
 
   useEffect(() => {
     api.get("/tools", { params: { sort: "rating" } }).then(({ data }) => setFeatured(data.slice(0, 6)));
     api.get("/categories").then(({ data }) => setCategories(data));
+    api.get("/tools", { params: { category: "everyday", sort: "popular" } }).then(({ data }) => setEveryday(data.slice(0, 8)));
   }, []);
 
   return (
@@ -51,7 +53,7 @@ export default function Home() {
               FOR ALL THINGS <span className="text-[#ffb000] text-glow-amber">AI</span>
             </h1>
             <p className="font-code text-base md:text-lg text-[#8b9bb4] mt-6 max-w-xl leading-relaxed">
-              Like the hardware store for physical tools — but for artificial intelligence. Packaged, powerful AI tools for every industry, ready to deploy the moment you land.
+              Like the hardware store for physical tools — but for artificial intelligence. 65+ packaged AI tools for every industry <span className="text-white">and every day</span>, ready to deploy the moment you land.
             </p>
             <div className="flex flex-wrap gap-4 mt-9">
               <Link to="/marketplace" data-testid="hero-browse"
@@ -89,6 +91,53 @@ export default function Home() {
               <p className="font-code text-sm text-[#8b9bb4] mt-2 leading-relaxed">{f.desc}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* EVERYDAY AI */}
+      <section className="relative z-10 max-w-[1400px] mx-auto px-5 py-16">
+        <div className="glass clip-hud p-8 md:p-10 scanlines relative overflow-hidden">
+          <div className="absolute -top-1/2 -right-20 w-96 h-96 rounded-full bg-[#00f0ff]/10 blur-3xl pointer-events-none" />
+          <div className="relative">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 clip-hud-sm bg-[#ffb000]/10 border border-[#ffb000]/40 mb-5">
+              <Coffee className="w-4 h-4 text-[#ffb000]" />
+              <span className="font-code text-[11px] tracking-[0.3em] text-[#ffb000] uppercase">For Everyone · Every Day</span>
+            </div>
+            <h2 className="font-display font-bold text-3xl md:text-4xl text-white max-w-2xl leading-tight">
+              AI Isn't Just for Enterprises. <span className="text-[#00f0ff] text-glow">It's for You.</span>
+            </h2>
+            <p className="font-code text-[#8b9bb4] mt-4 max-w-2xl leading-relaxed">
+              Real tools everyday people use to save time, spend smarter, eat better, learn faster and get more done — starting at just <span className="text-white font-bold">$9</span>. Enrich your daily life, one task at a time.
+            </p>
+            <div className="flex flex-wrap gap-4 mt-6">
+              {[{ icon: Clock, t: "Save hours weekly" }, { icon: PiggyBank, t: "Spend smarter" }, { icon: Smile, t: "Less stress, more done" }].map((b, i) => (
+                <div key={i} className="flex items-center gap-2 font-code text-sm text-[#e6f6ff]">
+                  <b.icon className="w-4 h-4 text-[#00f0ff]" /> {b.t}
+                </div>
+              ))}
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
+              {everyday.map((t, i) => (
+                <Link key={t.slug} to={`/tool/${t.slug}`} data-testid={`everyday-${t.slug}`}
+                  className="glass clip-hud-sm p-4 hover:border-[#00f0ff]/50 hover:-translate-y-1 transition-all group animate-hud-in" style={{ animationDelay: `${i * 50}ms` }}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="w-10 h-10 clip-hud-sm bg-[#00f0ff]/10 border border-[#00f0ff]/30 flex items-center justify-center">
+                      <Icon name={t.icon} className="w-5 h-5 text-[#00f0ff]" />
+                    </div>
+                    <span className="font-display font-bold text-lg text-white">${t.price.toFixed(0)}</span>
+                  </div>
+                  <div className="font-display font-bold text-white group-hover:text-[#00f0ff] transition-colors">{t.name}</div>
+                  <div className="font-code text-xs text-[#8b9bb4] mt-1 line-clamp-2">{t.tagline}</div>
+                </Link>
+              ))}
+            </div>
+
+            <Link to="/marketplace?category=everyday" data-testid="everyday-view-all"
+              className="inline-flex items-center gap-2 mt-8 px-6 py-3 clip-hud bg-[#00f0ff] text-black font-display font-bold tracking-wide hover:glow-cyan-strong transition-shadow">
+              EXPLORE EVERYDAY AI <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
       </section>
 
