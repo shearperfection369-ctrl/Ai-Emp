@@ -28,7 +28,9 @@ Build "AI Tool Emporium" — an online marketplace that sells packaged AI assist
 - Full brand kit page.
 
 ## Implemented (2026-06-18)
-- 18 AI tools across 12 industries (seeded); categories with counts.
+- **65 AI tools across 31 industries** (seeded) incl. logistics/freight, healthcare, HR, software, finance, legal, cybersecurity, manufacturing, construction, insurance, media, audio, gaming, agriculture, energy, automotive, real estate, e-commerce, research, accounting, productivity + **Everyday Life** (8 affordable $9–$29 personal daily-use tools). Categories with live counts.
+- Homepage **"Everyday AI" marketing band** stressing AI for everyday people/daily efficiency; hero stats 65+/30+.
+- Site-wide **dark-background logo** (hero lockup + navbar/footer/auth mark tile) — replaced stark-white version.
 - Home (hero + logo, stats, features, categories, featured), Marketplace (search/sort/filter), Tool Detail (capabilities + live AI simulation).
 - ARIA streaming assistant (recommends tools).
 - Auth: register/login (JWT session), Google OAuth callback, admin seed. Unified session_token cookie.
