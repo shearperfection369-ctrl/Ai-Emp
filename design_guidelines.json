@@ -1,0 +1,103 @@
+{
+  "theme": "Dark Theme ONLY (Futuristic / Advanced Warfare HUD / JARVIS)",
+  "typography": {
+    "headings": {
+      "fontFamily": "Rajdhani, sans-serif",
+      "weights": ["600", "700"],
+      "usage": "Use for primary titles, section headers, and HUD data points. Ensure tracking-tight or tracking-wider depending on context (wider for small subheadings)."
+    },
+    "body": {
+      "fontFamily": "JetBrains Mono, monospace",
+      "weights": ["400", "500"],
+      "usage": "Use for body text, numbers, metrics, and terminal/HUD logs."
+    }
+  },
+  "colors": {
+    "background": {
+      "primary": "#030508",
+      "secondary": "#0A1118",
+      "glass": "rgba(10, 17, 24, 0.6)"
+    },
+    "text": {
+      "primary": "#FFFFFF",
+      "secondary": "#8B9BB4",
+      "accent": "#00F0FF"
+    },
+    "brand": {
+      "cyan": "#00F0FF",
+      "amber": "#FFB000",
+      "red": "#FF2A2A"
+    },
+    "border": {
+      "hud": "rgba(0, 240, 255, 0.2)",
+      "active": "rgba(0, 240, 255, 0.6)"
+    }
+  },
+  "visual_enhancers": {
+    "glassmorphism": "Use backdrop-blur-md with bg-[#0A1118]/60 and a 1px border of #00F0FF/20 to simulate HUD glass.",
+    "glow_effects": "Use drop-shadows and box-shadows aggressively for active states: shadow-[0_0_15px_rgba(0,240,255,0.4)].",
+    "corner_cuts": "Use clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px) to give containers and buttons an angular, sci-fi military feel.",
+    "scanlines": "Overlay a subtle repeating linear gradient (scanlines) on hero backgrounds or terminal windows."
+  },
+  "grids": {
+    "bento_hud": "Use asymmetrical grid layouts (Grid cols-12) for dashboard and hero areas. Leave some empty cells to mimic a de-cluttered HUD.",
+    "spacing": "Use generous padding inside glass panels (p-6, p-8) and tight gaps (gap-4) between data-dense widgets."
+  },
+  "layouts": {
+    "global": "Full width, immersive. Use fixed, transparent navbars with heavy blur. No white backgrounds.",
+    "marketplace": "Grid of tools with holographic hover states. Live demo widgets should look like active terminal windows."
+  },
+  "motion": {
+    "interactions": "Micro-animations on hover: slight translate-y, border color transition to solid cyan, and glow intensity increase.",
+    "page_load": "Staggered fade-ins with slight slide-up, mimicking a HUD booting up.",
+    "libraries": "framer-motion for transitions, react-fast-marquee for data ticker tapes."
+  },
+  "3d_libraries": {
+    "tsparticles": "Use for floating digital dust/stars in the deep space background.",
+    "lucide-react": "Standard icons, but style them with cyan colors to match the HUD."
+  },
+  "accessibility": {
+    "contrast": "Ensure text over glass panels meets 4.5:1 ratio. Use text-shadow if needed. Do NOT use completely transparent backgrounds under text.",
+    "focus": "Focus states must have a solid 2px outline in Amber (#FFB000)."
+  },
+  "image_urls": {
+    "hero_background": {
+      "url": "https://images.unsplash.com/photo-1768329051020-489b1bc3f507?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHw0fHxzY2klMjBmaSUyMGRlZXAlMjBzcGFjZSUyMHN0YXJzJTIwaW50ZXJzdGVsbGFyfGVufDB8fHx8MTc4NDM5OTA3N3ww&ixlib=rb-4.1.0&q=85",
+      "description": "Abstract dark background with scattered white and blue particles."
+    },
+    "ai_hologram": {
+      "url": "https://images.unsplash.com/photo-1782330300409-f6c1ae5f64cb?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzl8MHwxfHNlYXJjaHwzfHxmdXR1cmlzdGljJTIwYWklMjBob2xvZ3JhbSUyMGludGVyZmFjZSUyMGRhcmslMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc4NDM5OTA3N3ww&ixlib=rb-4.1.0&q=85",
+      "description": "Glowing orbs and digital elements in dark space (JARVIS AI core representation)."
+    },
+    "deep_space_accent": {
+      "url": "https://images.unsplash.com/photo-1770699197193-8bab6f147108?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwxfHxzY2klMjBmaSUyMGRlZXAlMjBzcGFjZSUyMHN0YXJzJTIwaW50ZXJzdGVsbGFyfGVufDB8fHx8MTc4NDM5OTA3N3ww&ixlib=rb-4.1.0&q=85",
+      "description": "Planet in dark space."
+    },
+    "cyber_server": {
+      "url": "https://images.unsplash.com/photo-1639066648921-82d4500abf1a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NjV8MHwxfHNlYXJjaHwzfHxoaWdoJTIwdGVjaCUyMHNlcnZlciUyMHJvb20lMjBjeWJlcnxlbnwwfHx8fDE3ODQzOTkwNzh8MA&ixlib=rb-4.1.0&q=85",
+      "description": "A very large array of electronic equipment in a room."
+    }
+  },
+  "component_instructions": {
+    "buttons": "Create a custom Button component using Shadcn but add the sci-fi clip-path and glowing border logic.",
+    "cards": "Use Shadcn Cards but override classes to be: bg-[#0A1118]/60 backdrop-blur-md border border-[#00F0FF]/20 rounded-none clip-path-corners.",
+    "inputs": "Shadcn Inputs should have transparent backgrounds, bottom border only or full thin border with focus ring in cyan."
+  },
+  "instructions_to_main_agent": [
+    "Install and use 'Rajdhani' and 'JetBrains Mono' from Google Fonts in index.html.",
+    "Implement TSParticles for the background to give it that interstellar, JARVIS-like environment.",
+    "Build the UI to look like an immersive Call of Duty Advanced Warfare HUD: diegetic elements, cyan/amber glowing data points.",
+    "Do NOT use pure white backgrounds anywhere. The theme is strictly dark mode (void black).",
+    "Apply 'clip-path' polygon styles to buttons and cards to give them angular, futuristic military cuts.",
+    "Include 'data-testid' on all interactive elements as per the rules.",
+    "Use lucide-react for icons, but render them in cyan (#00F0FF) to match the HUD styling."
+  ],
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur).",
+    "You MUST NOT apply universal transition (e.g., transition: all). Add transitions for specific properties.",
+    "You MUST NOT center align the app container in CSS.",
+    "Every interaction needs micro-animations - hover states, transitions, etc.",
+    "Use sonner for toast notifications."
+  ]
+}
