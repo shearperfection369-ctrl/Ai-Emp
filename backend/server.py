@@ -372,14 +372,19 @@ async def require_credits(user: dict, cost: int):
 
 
 async def spend_credits(user: dict, cost: int) -> int:
-    bal = await ensure_credits(user)
-    await db.users.update_one({"user_id": user["user_id"]}, {"$inc": {"credits": -cost}})
-    return bal - cost
+    # Atomic guarded decrement so concurrent generations can never drive credits negative.
+    res = await db.users.update_one(
+        {"user_id": user["user_id"], "credits": {"$gte": cost}},
+        {"$inc": {"credits": -cost}})
+    if res.modified_count == 0:
+        raise HTTPException(status_code=402, detail="Not enough credits. Top up in the Studio.")
+    doc = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0, "credits": 1})
+    return doc.get("credits", 0)
 
 
 @api.get("/studio/credits")
 async def studio_credits(user: dict = Depends(get_current_user)):
-    return {"credits": await ensure_credits(user), "costs": STUDIO_COST}
+    return {"credits": await ensure_credits(user), "costs": dict(STUDIO_COST)}
 
 
 @api.get("/credit-packs")

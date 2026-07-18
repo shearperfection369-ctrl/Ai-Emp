@@ -28,6 +28,10 @@ Build "AI Tool Emporium" — an online marketplace that sells packaged AI assist
 - Full brand kit page.
 
 ## Implemented (2026-06-18)
+- **AI Studio (live, credit-metered)** — real working AI on the Emergent Universal Key: Image generation (gpt-image-1), Text (ChatGPT gpt-5.4 / Claude Sonnet 4.6 toggle), Research (LLM synthesis). Glowing HUD studio at /studio (auth-gated).
+- **Credits system + profit-safe economics**: 30 free credits on signup; per-generation costs text=2/research=4/image=15; atomic guarded deduction (never negative). Stripe **credit packs** (Spark 120/$9, Pro 350/$19, Studio 800/$29) — priced so even the cheapest bulk credit ($0.036) keeps ~3.4x+ markup over worst-case key cost. Credits auto-fulfilled on paid (idempotent).
+- **Glowing holographic tool icons** (rotating light-sweep ring + drop-shadow glow) site-wide; navbar credits chip + AI Studio nav + home CTA.
+- Verified: testing agent 74/74 backend + all frontend Studio/credits/regression flows.
 - **65 AI tools across 31 industries** (seeded) incl. logistics/freight, healthcare, HR, software, finance, legal, cybersecurity, manufacturing, construction, insurance, media, audio, gaming, agriculture, energy, automotive, real estate, e-commerce, research, accounting, productivity + **Everyday Life** (8 affordable $9–$29 personal daily-use tools). Categories with live counts.
 - Homepage **"Everyday AI" marketing band** stressing AI for everyday people/daily efficiency; hero stats 65+/30+.
 - Site-wide **dark-background logo** (hero lockup + navbar/footer/auth mark tile) — replaced stark-white version.
