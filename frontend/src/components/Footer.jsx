@@ -7,7 +7,7 @@ export default function Footer() {
       <div className="max-w-[1400px] mx-auto px-5 py-12 grid md:grid-cols-4 gap-8">
         <div className="md:col-span-2">
           <div className="flex items-center gap-2 mb-3">
-            <Zap className="w-5 h-5 text-[#00f0ff]" />
+            <img src="/logo-mark.png" alt="" className="w-8 h-8 object-contain" />
             <span className="font-orbit font-bold tracking-widest text-white">AI TOOL <span className="text-[#00f0ff]">EMPORIUM</span></span>
           </div>
           <p className="font-code text-sm text-[#8b9bb4] max-w-md leading-relaxed">

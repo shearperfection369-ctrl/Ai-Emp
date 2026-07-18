@@ -3,7 +3,8 @@ import { useSearchParams } from "react-router-dom";
 import api from "../lib/api";
 import { Icon } from "../lib/icons";
 import ToolCard from "../components/ToolCard";
-import { Search } from "lucide-react";
+import BundleCard from "../components/BundleCard";
+import { Search, Layers } from "lucide-react";
 
 const SORTS = [
   { id: "popular", label: "Most Deployed" },
@@ -16,6 +17,7 @@ export default function Marketplace() {
   const [params, setParams] = useSearchParams();
   const [tools, setTools] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [bundles, setBundles] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -29,7 +31,7 @@ export default function Marketplace() {
     setLoading(false);
   }, [category, sort, search]);
 
-  useEffect(() => { api.get("/categories").then(({ data }) => setCategories(data)); }, []);
+  useEffect(() => { api.get("/categories").then(({ data }) => setCategories(data)); api.get("/bundles").then(({ data }) => setBundles(data)); }, []);
   useEffect(() => { const t = setTimeout(load, search ? 300 : 0); return () => clearTimeout(t); }, [load, search]);
 
   const setParam = (key, val) => {
@@ -45,6 +47,19 @@ export default function Marketplace() {
         <h1 className="font-display font-bold text-3xl md:text-5xl text-white">The Marketplace</h1>
         <p className="font-code text-[#8b9bb4] mt-2">Browse {tools.length} battle-ready AI tools. Try any of them live before you deploy.</p>
       </div>
+
+      {category === "all" && !search && bundles.length > 0 && (
+        <div className="mb-12" data-testid="bundles-section">
+          <div className="flex items-center gap-2 mb-5">
+            <Layers className="w-5 h-5 text-[#ffb000]" />
+            <h2 className="font-display font-bold text-xl md:text-2xl text-white">Value Bundles</h2>
+            <span className="font-code text-xs text-[#8b9bb4]">// stack tools, save more</span>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {bundles.map((b, i) => <BundleCard key={b.slug} bundle={b} index={i} />)}
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col lg:flex-row gap-4 mb-8">
         <div className="relative flex-1">

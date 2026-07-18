@@ -46,25 +46,12 @@ export default function Branding() {
       {/* Logo */}
       <section className="mb-12">
         <h2 className="font-display font-bold text-xl text-white mb-4">Logo System</h2>
-        <div className="grid sm:grid-cols-3 gap-4">
-          <div className="glass clip-hud p-10 flex items-center justify-center glow-cyan">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 clip-hud-sm bg-[#00f0ff]/10 border border-[#00f0ff]/50 flex items-center justify-center glow-cyan">
-                <Zap className="w-6 h-6 text-[#00f0ff]" />
-              </div>
-              <div>
-                <div className="font-orbit font-bold tracking-widest text-white text-sm">AI TOOL</div>
-                <div className="font-orbit font-bold tracking-widest text-[#00f0ff] text-sm text-glow">EMPORIUM</div>
-              </div>
-            </div>
+        <div className="grid md:grid-cols-3 gap-4">
+          <div className="md:col-span-2 glass clip-hud p-8 flex items-center justify-center glow-cyan">
+            <img src="/logo-full.png" alt="AI Tool Emporium official logo" className="max-h-44 object-contain" />
           </div>
-          <div className="glass clip-hud p-10 flex items-center justify-center bg-[#00f0ff]/5">
-            <div className="w-16 h-16 clip-hud-sm bg-[#00f0ff] flex items-center justify-center">
-              <Zap className="w-8 h-8 text-black" />
-            </div>
-          </div>
-          <div className="glass clip-hud p-10 flex items-center justify-center">
-            <span className="font-orbit font-black text-4xl text-white">AI<span className="text-[#00f0ff] text-glow">E</span></span>
+          <div className="glass clip-hud p-8 flex items-center justify-center bg-[#00f0ff]/5">
+            <img src="/logo-mark.png" alt="AI Tool Emporium mark" className="max-h-36 object-contain drop-shadow-[0_0_18px_rgba(0,240,255,0.5)]" />
           </div>
         </div>
       </section>

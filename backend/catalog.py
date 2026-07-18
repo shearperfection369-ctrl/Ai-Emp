@@ -161,3 +161,93 @@ def get_tool_by_lookup(lookup_key):
         if t["lookup_key"] == lookup_key:
             return t
     return None
+
+
+# ------------------ Quality tiers + "Why pick this one?" ------------------
+# tier, speed, quality, why
+TIER_META = {
+    "neurocopy": ("Gold", "Fast", "Best-in-class", "The workhorse for ad copy — conversion-tested structures at speed. Pick it when volume AND punch both matter."),
+    "leadhawk": ("Silver", "Fast", "High quality", "Best for reply rates, not word count. Choose it when personalization beats mass-blasting."),
+    "storyforge": ("Silver", "Deep", "High quality", "Trades a little speed for structure and depth. Pick it for long-form that actually ranks."),
+    "codepilot-x": ("Gold", "Fast", "Best-in-class", "Deepest reasoning of the dev tools. Choose it for real debugging, not just autocomplete."),
+    "ledgermind": ("Gold", "Deep", "Best-in-class", "Executive-grade analysis over raw speed. Pick it when the numbers need a story, not just a summary."),
+    "mediscribe": ("Gold", "Deep", "Enterprise-grade", "Highest precision, clinician-reviewed outputs. Choose it when accuracy is non-negotiable."),
+    "lexdraft": ("Gold", "Deep", "Best-in-class", "Draft + plain-English explain in one pass. Pick it when clarity and defensibility both count."),
+    "tutorcore": ("Bronze", "Instant", "Good enough", "Fastest, most affordable way to build lessons. Pick it for high volume at low cost."),
+    "talentsift": ("Silver", "Fast", "High quality", "Balanced screening + JD writing. Choose it to move fast without bias creeping in."),
+    "helpsphere": ("Silver", "Instant", "High quality", "Near-instant, on-brand replies. Pick it for support teams that live in the queue."),
+    "dataseer": ("Gold", "Fast", "Best-in-class", "SQL + narrative + viz advice together. Choose it when you need the answer, not just the query."),
+    "brandforge": ("Silver", "Fast", "High quality", "Names, voice and palette in one shot. Pick it to go from idea to identity in minutes."),
+    "pitchdeck-ai": ("Gold", "Deep", "Best-in-class", "Investor-framed narratives, not just bullet points. Choose it when the raise is on the line."),
+    "socialpulse": ("Bronze", "Instant", "Good enough", "Cheapest way to never run out of posts. Pick it for daily volume across platforms."),
+    "translatewave": ("Silver", "Fast", "High quality", "Localizes meaning, not words. Choose it when tone and culture must survive translation."),
+    "resumerocket": ("Bronze", "Instant", "Good enough", "Lowest price, fastest wins. Pick it to sharpen a resume in one sitting."),
+    "emailgenie": ("Silver", "Fast", "High quality", "Subject lines + body + CTA together. Choose it to lift open and click rates."),
+    "seosensei": ("Gold", "Fast", "Best-in-class", "Keyword clusters + intent + meta in one pass. Pick it to actually move rankings."),
+}
+
+for _t in CATALOG:
+    _tier, _speed, _quality, _why = TIER_META.get(_t["slug"], ("Silver", "Fast", "High quality", ""))
+    _t["tier"] = _tier
+    _t["speed"] = _speed
+    _t["quality_tier"] = _quality
+    _t["why"] = _why
+
+
+# ------------------ Value bundles / starter packs ------------------
+def _bundle(slug, name, tagline, icon, tool_slugs, price, badge=None):
+    original = sum(get_tool(s)["price"] for s in tool_slugs)
+    return {
+        "slug": slug,
+        "name": name,
+        "tagline": tagline,
+        "icon": icon,
+        "tool_slugs": tool_slugs,
+        "price": float(price),
+        "original_price": round(original, 2),
+        "amount_cents": int(round(price * 100)),
+        "lookup_key": f"bundle_{slug}",
+        "savings_pct": round((1 - price / original) * 100) if original else 0,
+        "badge": badge,
+        "is_bundle": True,
+    }
+
+
+BUNDLES = [
+    _bundle("creator-pack", "Creator Pack", "Everything to plan, write & publish content that performs.",
+            "PenTool", ["storyforge", "socialpulse", "emailgenie"], 99, "Most Popular"),
+    _bundle("growth-engine", "Growth Engine", "The full-funnel marketing & sales acquisition stack.",
+            "TrendingUp", ["neurocopy", "seosensei", "leadhawk"], 129, "Best Value"),
+    _bundle("founders-toolkit", "Founder's Toolkit", "Launch-ready: brand it, pitch it, understand the numbers.",
+            "Rocket", ["pitchdeck-ai", "brandforge", "ledgermind"], 179),
+    _bundle("career-launch", "Career Launch", "Land the role and hire the team — the people stack.",
+            "Users", ["resumerocket", "talentsift", "tutorcore"], 89),
+]
+
+
+def get_bundle(slug):
+    for b in BUNDLES:
+        if b["slug"] == slug:
+            return b
+    return None
+
+
+def get_bundle_by_lookup(lookup_key):
+    for b in BUNDLES:
+        if b["lookup_key"] == lookup_key:
+            return b
+    return None
+
+
+# ------------------ Seed reviews (Consumer-Reports trust layer) ------------------
+SAMPLE_REVIEWS = {
+    "neurocopy": [("Marcus T.", 5, "Cut our ad-writing time by 80%. The variants actually convert."),
+                  ("Priya K.", 5, "Bronze/Silver/Gold framing helped me pick fast. Worth every dollar.")],
+    "codepilot-x": [("Dev_Nolan", 5, "Caught a race condition I'd been chasing for two days."),
+                    ("Sara L.", 4, "Great for boilerplate and tests. Occasionally over-explains.")],
+    "brandforge": [("Jenna R.", 5, "Named my whole company in an afternoon. The palette suggestions slap.")],
+    "seosensei": [("GrowthGuy", 5, "Ranked page one in 6 weeks using its keyword clusters."),
+                  ("Ana M.", 4, "Solid meta output. Wish it exported to CSV.")],
+    "resumerocket": [("Tyler B.", 5, "Three interviews in a week after the rewrite. Insane ROI for $29.")],
+    "pitchdeck-ai": [("FounderFi", 5, "Used it for our seed deck. Investors said the narrative was tight.")],
+}

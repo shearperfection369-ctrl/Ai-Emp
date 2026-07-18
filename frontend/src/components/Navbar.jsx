@@ -22,9 +22,7 @@ export default function Navbar() {
     <nav className="fixed top-0 inset-x-0 z-50 glass-strong border-b border-[#00f0ff]/20" data-testid="navbar">
       <div className="max-w-[1400px] mx-auto px-5 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5 group" data-testid="nav-logo">
-          <div className="w-9 h-9 clip-hud-sm bg-[#00f0ff]/10 border border-[#00f0ff]/40 flex items-center justify-center glow-cyan group-hover:glow-cyan-strong transition-shadow">
-            <Zap className="w-5 h-5 text-[#00f0ff]" strokeWidth={2.4} />
-          </div>
+          <img src="/logo-mark.png" alt="AI Tool Emporium" className="w-10 h-10 object-contain drop-shadow-[0_0_10px_rgba(0,240,255,0.5)] group-hover:drop-shadow-[0_0_16px_rgba(0,240,255,0.75)] transition-all" />
           <div className="leading-none">
             <div className="font-orbit text-[15px] font-bold tracking-widest text-white">
               AI TOOL <span className="text-[#00f0ff] text-glow">EMPORIUM</span>

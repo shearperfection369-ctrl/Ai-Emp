@@ -29,10 +29,8 @@ export default function Login() {
   return (
     <div className="max-w-md mx-auto px-5 py-16" data-testid="login-page">
       <div className="glass clip-hud p-8 animate-hud-in">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="w-10 h-10 clip-hud-sm bg-[#00f0ff]/10 border border-[#00f0ff]/40 flex items-center justify-center glow-cyan">
-            <Zap className="w-5 h-5 text-[#00f0ff]" />
-          </div>
+        <div className="flex items-center gap-3 mb-6">
+          <img src="/logo-mark.png" alt="AI Tool Emporium" className="w-12 h-12 object-contain drop-shadow-[0_0_12px_rgba(0,240,255,0.5)]" />
           <div>
             <h1 className="font-display font-bold text-2xl text-white">Access Terminal</h1>
             <p className="font-code text-xs text-[#8b9bb4]">Authenticate to enter the Emporium</p>

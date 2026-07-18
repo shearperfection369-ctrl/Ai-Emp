@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import { Icon } from "../lib/icons";
-import { Star, Users } from "lucide-react";
+import { Star, Users, Zap } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { toast } from "sonner";
+import TierBadge from "./TierBadge";
 
 export default function ToolCard({ tool, index = 0 }) {
   const { addItem, has } = useCart();
@@ -23,12 +24,16 @@ export default function ToolCard({ tool, index = 0 }) {
         <div className="w-12 h-12 clip-hud-sm bg-[#00f0ff]/10 border border-[#00f0ff]/30 flex items-center justify-center mb-4 group-hover:glow-cyan transition-shadow">
           <Icon name={tool.icon} className="w-6 h-6 text-[#00f0ff]" strokeWidth={1.8} />
         </div>
-        <div className="font-code text-[10px] tracking-[0.25em] uppercase text-[#8b9bb4] mb-1">{tool.category}</div>
+        <div className="flex items-center gap-2 mb-1">
+          <span className="font-code text-[10px] tracking-[0.25em] uppercase text-[#8b9bb4]">{tool.category}</span>
+          {tool.tier && <TierBadge tier={tool.tier} />}
+        </div>
         <h3 className="font-display font-bold text-xl text-white group-hover:text-[#00f0ff] transition-colors">{tool.name}</h3>
         <p className="font-code text-sm text-[#8b9bb4] mt-1.5 leading-relaxed line-clamp-2">{tool.tagline}</p>
         <div className="flex items-center gap-4 mt-4 font-code text-xs text-[#8b9bb4]">
           <span className="flex items-center gap-1 text-[#ffb000]"><Star className="w-3.5 h-3.5 fill-[#ffb000]" /> {tool.rating}</span>
           <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {tool.users.toLocaleString()}</span>
+          {tool.speed && <span className="flex items-center gap-1 text-[#00f0ff]"><Zap className="w-3.5 h-3.5" /> {tool.speed}</span>}
         </div>
       </Link>
       <div className="flex items-center justify-between mt-5 pt-4 border-t border-[#00f0ff]/10">

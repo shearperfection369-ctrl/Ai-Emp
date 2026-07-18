@@ -41,6 +41,7 @@ export default function Home() {
         </div>
         <div className="relative z-10 max-w-[1400px] mx-auto px-5 pt-20 pb-24 md:pt-28 md:pb-32">
           <div className="max-w-3xl animate-hud-in">
+            <img src="/logo-full.png" alt="AI Tool Emporium" className="h-24 md:h-32 object-contain mb-6 drop-shadow-[0_0_28px_rgba(0,240,255,0.4)]" data-testid="hero-logo" />
             <div className="inline-flex items-center gap-2 px-3 py-1.5 clip-hud-sm glass border border-[#00f0ff]/30 mb-6">
               <span className="w-2 h-2 rounded-full bg-[#00f0ff] animate-blink" />
               <span className="font-code text-[11px] tracking-[0.3em] text-[#00f0ff] uppercase">System Online · 2026 Build</span>

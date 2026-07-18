@@ -21,7 +21,8 @@ from pydantic import BaseModel, EmailStr, Field
 
 from emergentintegrations.llm.chat import LlmChat, UserMessage, TextDelta, StreamDone
 
-from catalog import CATALOG, CATEGORIES, get_tool, get_tool_by_lookup
+from catalog import (CATALOG, CATEGORIES, BUNDLES, SAMPLE_REVIEWS, get_tool,
+                     get_tool_by_lookup, get_bundle, get_bundle_by_lookup)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("emporium")
@@ -71,6 +72,11 @@ class ChatRequest(BaseModel):
 
 class DemoRequest(BaseModel):
     input: str
+
+
+class ReviewRequest(BaseModel):
+    rating: int = Field(ge=1, le=5)
+    comment: str = ""
 
 
 # ----------------------------- Auth helpers -----------------------------
@@ -277,6 +283,59 @@ async def get_tool_detail(slug: str):
     return tool
 
 
+@api.get("/bundles")
+async def list_bundles():
+    out = []
+    for b in BUNDLES:
+        tools = []
+        for s in b["tool_slugs"]:
+            t = get_tool(s)
+            if t:
+                tools.append({"slug": t["slug"], "name": t["name"], "icon": t["icon"], "price": t["price"]})
+        out.append({**b, "tools": tools})
+    return out
+
+
+@api.get("/bundles/{slug}")
+async def get_bundle_detail(slug: str):
+    b = get_bundle(slug)
+    if not b:
+        raise HTTPException(status_code=404, detail="Bundle not found")
+    tools = [get_tool(s) for s in b["tool_slugs"] if get_tool(s)]
+    tools = [{"slug": t["slug"], "name": t["name"], "icon": t["icon"], "tagline": t["tagline"], "price": t["price"]} for t in tools]
+    return {**b, "tools": tools}
+
+
+@api.get("/tools/{slug}/reviews")
+async def get_reviews(slug: str):
+    revs = await db.reviews.find({"tool_slug": slug}, {"_id": 0}).sort("created_at", -1).to_list(200)
+    count = len(revs)
+    avg = round(sum(r["rating"] for r in revs) / count, 1) if count else 0
+    return {"reviews": revs, "average": avg, "count": count}
+
+
+@api.post("/tools/{slug}/reviews")
+async def add_review(slug: str, body: ReviewRequest, user: dict = Depends(get_current_user)):
+    if not get_tool(slug):
+        raise HTTPException(status_code=404, detail="Tool not found")
+    verified = False
+    txns = await db.payment_transactions.find(
+        {"user_id": user["user_id"], "payment_status": "paid"}, {"_id": 0}).to_list(500)
+    for tx in txns:
+        for item in tx.get("items", []):
+            slugs = item.get("included_slugs") or [item.get("slug")]
+            if slug in slugs:
+                verified = True
+    doc = {
+        "tool_slug": slug, "user_id": user["user_id"],
+        "user_name": user.get("name") or user["email"].split("@")[0],
+        "rating": body.rating, "comment": body.comment.strip(), "verified": verified,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.reviews.update_one({"tool_slug": slug, "user_id": user["user_id"]}, {"$set": doc}, upsert=True)
+    return doc
+
+
 # ----------------------------- AI: live demo (single-shot) -----------------------------
 @api.post("/tools/{slug}/demo")
 async def run_demo(slug: str, body: DemoRequest):
@@ -363,14 +422,22 @@ async def create_checkout(body: CheckoutRequest, request: Request):
         price = prices[0]
         line_items.append({"price": price.id, "quantity": it.quantity})
         tool = get_tool_by_lookup(it.lookup_key)
+        bundle = get_bundle_by_lookup(it.lookup_key)
         total_cents += (price.unit_amount or 0) * it.quantity
-        resolved.append({
-            "slug": tool["slug"] if tool else it.lookup_key,
-            "name": tool["name"] if tool else it.lookup_key,
-            "lookup_key": it.lookup_key,
-            "price": (price.unit_amount or 0) / 100,
-            "quantity": it.quantity,
-        })
+        if bundle:
+            resolved.append({
+                "slug": bundle["slug"], "name": bundle["name"], "lookup_key": it.lookup_key,
+                "price": (price.unit_amount or 0) / 100, "quantity": it.quantity,
+                "is_bundle": True, "included_slugs": bundle["tool_slugs"],
+            })
+        else:
+            resolved.append({
+                "slug": tool["slug"] if tool else it.lookup_key,
+                "name": tool["name"] if tool else it.lookup_key,
+                "lookup_key": it.lookup_key,
+                "price": (price.unit_amount or 0) / 100, "quantity": it.quantity,
+                "is_bundle": False, "included_slugs": [tool["slug"]] if tool else [],
+            })
 
     kwargs = dict(
         line_items=line_items,
@@ -457,13 +524,15 @@ async def library(user: dict = Depends(get_current_user)):
     owned = {}
     for tx in txns:
         for item in tx.get("items", []):
-            tool = get_tool(item["slug"])
-            if tool:
-                owned[item["slug"]] = {
-                    "slug": tool["slug"], "name": tool["name"], "tagline": tool["tagline"],
-                    "category": tool["category"], "icon": tool["icon"], "price": tool["price"],
-                    "purchased_at": tx.get("updated_at"),
-                }
+            slugs = item.get("included_slugs") or [item.get("slug")]
+            for s in slugs:
+                tool = get_tool(s)
+                if tool:
+                    owned[s] = {
+                        "slug": tool["slug"], "name": tool["name"], "tagline": tool["tagline"],
+                        "category": tool["category"], "icon": tool["icon"], "price": tool["price"],
+                        "purchased_at": tx.get("updated_at"),
+                    }
     return list(owned.values())
 
 
@@ -535,6 +604,18 @@ async def seed_admin():
             await db.users.update_one({"email": email}, {"$set": updates})
 
 
+async def seed_reviews():
+    if await db.reviews.count_documents({}) > 0:
+        return
+    for slug, revs in SAMPLE_REVIEWS.items():
+        for name, rating, comment in revs:
+            await db.reviews.insert_one({
+                "tool_slug": slug, "user_id": f"seed_{uuid.uuid4().hex[:8]}",
+                "user_name": name, "rating": rating, "comment": comment, "verified": True,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            })
+
+
 @app.on_event("startup")
 async def startup():
     await db.users.create_index("email", unique=True)
@@ -544,6 +625,7 @@ async def startup():
     await db.payment_transactions.create_index("session_id")
     await seed_tools()
     await seed_admin()
+    await seed_reviews()
     logger.info("Emporium startup complete: seeded %d tools", len(CATALOG))
 
 
