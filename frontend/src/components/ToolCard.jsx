@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Icon } from "../lib/icons";
+import { Icon, ToolIcon } from "../lib/icons";
 import { Star, Users, Zap } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { toast } from "sonner";
@@ -21,9 +21,7 @@ export default function ToolCard({ tool, index = 0 }) {
         </span>
       )}
       <Link to={`/tool/${tool.slug}`} className="flex-1">
-        <div className="w-12 h-12 clip-hud-sm bg-[#00f0ff]/10 border border-[#00f0ff]/30 flex items-center justify-center mb-4 group-hover:glow-cyan transition-shadow">
-          <Icon name={tool.icon} className="w-6 h-6 text-[#00f0ff]" strokeWidth={1.8} />
-        </div>
+        <div className="mb-4"><ToolIcon name={tool.icon} /></div>
         <div className="flex items-center gap-2 mb-1">
           <span className="font-code text-[10px] tracking-[0.25em] uppercase text-[#8b9bb4]">{tool.category}</span>
           {tool.tier && <TierBadge tier={tool.tier} />}

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../lib/api";
-import { Icon } from "../lib/icons";
+import { Icon, ToolIcon } from "../lib/icons";
 import ToolCard from "../components/ToolCard";
-import { ArrowRight, Cpu, ShieldCheck, Zap, Rocket, Bot, Coffee, Clock, PiggyBank, Smile } from "lucide-react";
+import { ArrowRight, Cpu, ShieldCheck, Zap, Rocket, Bot, Coffee, Clock, PiggyBank, Smile, Sparkles } from "lucide-react";
 
 const HERO_BG = "https://images.unsplash.com/photo-1768329051020-489b1bc3f507?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHw0fHxzY2klMjBmaSUyMGRlZXAlMjBzcGFjZSUyMHN0YXJzJTIwaW50ZXJzdGVsbGFyfGVufDB8fHx8MTc4NDM5OTA3N3ww&ixlib=rb-4.1.0&q=85";
 
@@ -122,9 +122,7 @@ export default function Home() {
                 <Link key={t.slug} to={`/tool/${t.slug}`} data-testid={`everyday-${t.slug}`}
                   className="glass clip-hud-sm p-4 hover:border-[#00f0ff]/50 hover:-translate-y-1 transition-all group animate-hud-in" style={{ animationDelay: `${i * 50}ms` }}>
                   <div className="flex items-center justify-between mb-2">
-                    <div className="w-10 h-10 clip-hud-sm bg-[#00f0ff]/10 border border-[#00f0ff]/30 flex items-center justify-center">
-                      <Icon name={t.icon} className="w-5 h-5 text-[#00f0ff]" />
-                    </div>
+                    <ToolIcon name={t.icon} size="sm" />
                     <span className="font-display font-bold text-lg text-white">${t.price.toFixed(0)}</span>
                   </div>
                   <div className="font-display font-bold text-white group-hover:text-[#00f0ff] transition-colors">{t.name}</div>
@@ -158,6 +156,44 @@ export default function Home() {
               <span className="font-code text-[10px] text-[#8b9bb4]">{c.count} tools</span>
             </Link>
           ))}
+        </div>
+      </section>
+
+      {/* AI STUDIO CTA */}
+      <section className="relative z-10 max-w-[1400px] mx-auto px-5 py-8">
+        <div className="glass clip-hud p-8 md:p-12 relative overflow-hidden border-[#00f0ff]/30">
+          <div className="absolute inset-0 scanlines pointer-events-none" />
+          <div className="absolute -bottom-1/2 -left-16 w-96 h-96 rounded-full bg-[#00f0ff]/10 blur-3xl pointer-events-none" />
+          <div className="relative grid md:grid-cols-2 gap-8 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 clip-hud-sm bg-[#00f0ff]/10 border border-[#00f0ff]/40 mb-5">
+                <Sparkles className="w-4 h-4 text-[#00f0ff]" />
+                <span className="font-code text-[11px] tracking-[0.3em] text-[#00f0ff] uppercase">Live · Real AI</span>
+              </div>
+              <h2 className="font-display font-bold text-3xl md:text-4xl text-white leading-tight">
+                Not Just Listings — <span className="text-[#00f0ff] text-glow">Working AI You Can Run</span>
+              </h2>
+              <p className="font-code text-[#8b9bb4] mt-4 leading-relaxed">
+                Step into the AI Studio and actually generate — images, writing, code and research — powered by frontier models (GPT + Claude + image AI). Pay only for what you use with simple credits.
+              </p>
+              <Link to="/studio" data-testid="home-studio-cta"
+                className="inline-flex items-center gap-2 mt-6 px-7 py-3.5 clip-hud bg-[#00f0ff] text-black font-display font-bold tracking-wide hover:glow-cyan-strong transition-shadow">
+                <Sparkles className="w-4 h-4" /> LAUNCH AI STUDIO
+              </Link>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {[{ i: "Image", c: "15cr" }, { i: "Writer", c: "2cr" }, { i: "Research", c: "4cr" }].map((x, idx) => (
+                <div key={idx} className="glass clip-hud-sm p-4 text-center">
+                  <div className="font-display font-bold text-white">{x.i}</div>
+                  <div className="font-code text-[11px] text-[#00f0ff] mt-1">{x.c}</div>
+                </div>
+              ))}
+              <div className="col-span-3 glass clip-hud-sm p-4 text-center">
+                <div className="font-orbit font-bold text-2xl text-[#ffb000] text-glow-amber">30 free credits</div>
+                <div className="font-code text-[11px] text-[#8b9bb4] mt-1">on every new account — try it instantly</div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

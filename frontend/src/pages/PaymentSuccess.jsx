@@ -2,11 +2,13 @@ import { useEffect, useState, useRef } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import api from "../lib/api";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import { CheckCircle2, Loader2, XCircle, ArrowRight, Library as LibIcon } from "lucide-react";
 
 export default function PaymentSuccess() {
   const [params] = useSearchParams();
   const { clear } = useCart();
+  const { refreshUser } = useAuth();
   const [state, setState] = useState("checking"); // checking | paid | failed
   const [info, setInfo] = useState(null);
   const clearedRef = useRef(false);
@@ -23,7 +25,7 @@ export default function PaymentSuccess() {
         if (data.payment_status === "paid") {
           setInfo(data);
           setState("paid");
-          if (!clearedRef.current) { clear(); clearedRef.current = true; }
+          if (!clearedRef.current) { clear(); refreshUser(); clearedRef.current = true; }
           return;
         }
         if (["expired", "failed"].includes(data.payment_status)) { setState("failed"); return; }

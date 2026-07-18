@@ -1,4 +1,4 @@
-import { Icon } from "../lib/icons";
+import { Icon, ToolIcon } from "../lib/icons";
 import { useCart } from "../context/CartContext";
 import { toast } from "sonner";
 import { Check, PlusCircle } from "lucide-react";
@@ -17,9 +17,7 @@ export default function BundleCard({ bundle, index = 0 }) {
         SAVE {bundle.savings_pct}%
       </div>
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-11 h-11 clip-hud-sm bg-[#ffb000]/10 border border-[#ffb000]/30 flex items-center justify-center glow-amber">
-          <Icon name={bundle.icon} className="w-5 h-5 text-[#ffb000]" />
-        </div>
+        <ToolIcon name={bundle.icon} accent="#ffb000" />
         <div>
           <div className="font-code text-[10px] tracking-[0.25em] uppercase text-[#8b9bb4]">Value Bundle</div>
           <h3 className="font-display font-bold text-xl text-white">{bundle.name}</h3>

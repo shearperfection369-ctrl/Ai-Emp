@@ -18,6 +18,7 @@ import CartPage from "./pages/CartPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Library from "./pages/Library";
+import Studio from "./pages/Studio";
 import AdminDashboard from "./pages/AdminDashboard";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancel from "./pages/PaymentCancel";
@@ -46,6 +47,7 @@ function AppRouter() {
           <Route path="/payment/success" element={<PaymentSuccess />} />
           <Route path="/payment/cancel" element={<PaymentCancel />} />
           <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
+          <Route path="/studio" element={<ProtectedRoute><Studio /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute admin><AdminDashboard /></ProtectedRoute>} />
         </Routes>
       </main>

@@ -1,0 +1,54 @@
+{
+  "summary": "Iteration 4 (AI Studio: image/text/research, credit-metering, 3 credit packs, 402 enforcement, nav credits chip, home CTA) fully verified. 14/14 new backend pytest cases pass (74/74 across all iterations). Frontend Studio flow verified end-to-end on a FRESH user: register -> 30 credits -> text (Claude, 30->28) -> image (28->13) -> research (30->26 on separate fresh user) -> insufficient credits (11 credits attempting 15-credit image) yields toast + auto-scroll to credit-packs + NO deduction (balance still 11). All 3 tabs (studio-tab-image/text/research) show correct per-op cost, engine-chatgpt/engine-claude toggles work, studio-image-output <img> renders with base64 data URL + download link, studio-text-output renders text, nav-credits chip stays in sync with studio-credits after refreshUser(). Credit-packs section renders Spark $9/120, Pro $19/350 (BEST VALUE), Studio $29/800 (POWER USER); buy-pro redirects to https://checkout.stripe.com showing 'Pro Pack — 350 AI Studio credits — US$19.00'. Regression: 65 tools + 32 filter chips + 4 bundles on marketplace, admin login (admin@aitoolemporium.com / Emporium@2026) works and /admin Command Center loads with revenue/orders/operators/tools live tiles.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/backend/tests/test_iteration2.py",
+    "/app/backend/tests/test_iteration3.py",
+    "/app/backend/tests/test_iteration4.py",
+    "/app/test_reports/pytest/pytest_iteration4.xml",
+    "/app/test_reports/pytest/pytest_all.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py has grown to 777 lines (up from 646). Studio endpoints, credit helpers (ensure_credits/require_credits/spend_credits), credit-pack checkout branch, and fulfill_transaction are now all inline. Splitting into routers/studio.py + routers/payments.py + services/credits.py is overdue.",
+    "STUDIO_COST is a module-level dict but /studio/credits returns it directly (`return {..., 'costs': STUDIO_COST}`). This means a mutation anywhere in the process would leak. Consider returning `dict(STUDIO_COST)` (shallow copy) for immutability.",
+    "spend_credits uses a raw $inc without a `credits: {$gte: cost}` filter, so a race condition between two concurrent generations could drive credits negative even though require_credits gated it. Recommend `update_one({'user_id': u, 'credits': {'$gte': cost}}, {'$inc': {'credits': -cost}})` + inspect modified_count for atomicity.",
+    "studio_text/research/image call spend_credits AFTER the AI call succeeds — good for user (no charge on failure) but if the AI succeeds and the DB update fails, the user gets the output free. Low risk but worth wrapping in try/except with a warning log.",
+    "fulfill_transaction relies on `is_credit_pack` set in each item at checkout time. If a legacy transaction (pre-iter-4) is replayed via webhook it will not grant credits — acceptable but flag if backfilling is ever needed.",
+    "OpenAIImageGeneration import in server.py is used only once (studio_image). Fine, but consider a small retry with exponential backoff on transient 5xx — gpt-image-1 occasionally times out at ~60s and the current 502 message is generic.",
+    "The Studio.jsx `run()` sets `setBusy(true); setTextOut(''); setImgOut('');` before the API call, which means on a 402 the previous output is wiped and the user just sees the error toast — minor UX loss (they lose their last generation view). Not critical.",
+    "Navbar nav-credits chip uses `user.credits ?? 0` — for a brief tick between login and /auth/me hydration the chip may flash '0'. Consider showing '—' until user object hydrates."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration4.py"
+  ],
+  "success_rate": { "backend": "100% (74/74)", "frontend": "100% (all Studio + regression flows verified)" },
+  "test_credentials": "Admin: admin@aitoolemporium.com / Emporium@2026. Fresh users are auto-registered per test with TEST_ prefixed emails.",
+  "seed_data_creation": "iteration_4 tests register 2 fresh TEST_studio_* users (via /auth/register) and consume real Emergent LLM credits (2 text + 4 research + 15 image on user 1; 15+2 image+text + 1 failed 402 on user 2) plus 3 Stripe test-mode credit-pack checkout sessions (cs_test_ rows added to payment_transactions in 'initiated' status). Frontend flow also creates 2 more TEST_ui* users and consumes credits similarly. No production data touched.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iter-4 tests live at /app/backend/tests/test_iteration4.py. Uses a module-scoped `fresh_user` fixture (registers via POST /api/auth/register and holds both cookie session + Bearer). 14 tests covering: (a) /studio/credits requires auth + fresh user has 30 credits + correct costs dict, (b) /credit-packs returns exactly Spark/Pro/Studio with correct credits/price/lookup_key, (c) /studio/text with empty prompt -> 400, chatgpt returns engine containing 'GPT' and deducts 2, claude returns engine containing 'Claude' and deducts 2, (d) /studio/research deducts 4, (e) /studio/image deducts 15 and returns base64>1000 chars (uses 120s timeout), (f) 402 enforcement: drain fresh user to 13 credits, attempt 15-credit image -> 402 with balance unchanged, (g) 3 credit-pack Stripe checkouts (credits_spark/pro/studio) all return https://checkout.stripe.com URLs, (h) regression: 65 tools + 4 bundles. Full suite (all 4 iterations) runs in ~46s via `cd /app/backend && pytest tests/ -v` with 2 xdist workers.",
+  "verified_flows_iter4": [
+    "Backend: GET /api/studio/credits auth-required, fresh user has 30 credits, costs={text:2,research:4,image:15}.",
+    "Backend: GET /api/credit-packs -> 3 packs with credits/price/lookup_key correct.",
+    "Backend: POST /api/studio/text {mode:chatgpt} deducts 2, engine mentions 'GPT'; mode:claude deducts 2, engine mentions 'Claude'; empty prompt -> 400.",
+    "Backend: POST /api/studio/research deducts 4, returns non-trivial output.",
+    "Backend: POST /api/studio/image deducts 15, returns image_base64 (>1000 chars).",
+    "Backend: draining a fresh user then attempting image -> HTTP 402 with balance unchanged (13 credits, needed 15).",
+    "Backend: POST /api/payments/checkout for credits_pro / credits_spark / credits_studio all return valid https://checkout.stripe.com URLs.",
+    "Frontend Home: home-studio-cta present, nav-ai-studio present, 65 tool cards render with ToolIcon (svg/img) glowing tiles.",
+    "Frontend /studio (fresh user): studio-page loads, studio-credits shows 30, nav-credits shows 30, 3 tabs (studio-tab-image/text/research) render with correct per-op cost badges.",
+    "Frontend Studio Text (Claude): engine-claude toggle selected, studio-input filled, studio-run clicked -> studio-text-output rendered, studio-credits=28 and nav-credits=28 in sync.",
+    "Frontend Studio Image: run button shows 'GENERATE · 15 CREDITS', studio-image-output <img> renders with data:image/png;base64,... URL + download link, credits drop by 15 (28->13).",
+    "Frontend Studio Research: run button shows 'GENERATE · 4 CREDITS', output renders in studio-text-output, credits drop by 4 (30->26).",
+    "Frontend 402 UX: with 11 credits + attempting 15-credit image -> Sonner toast 'Not enough credits — this needs 15, you have 11. Top up in the Studio.' + page auto-scrolls to credit-packs, balance UNCHANGED at 11.",
+    "Frontend Credit packs: pack-spark/pro/studio all render with correct name/credits/price/badges; buy-pro click redirects to https://checkout.stripe.com/... showing 'Pro Pack — 350 AI Studio credits — US$19.00'.",
+    "Regression: /marketplace still shows 65 tool cards + 32 filter chips + 4 bundles, admin login + /admin Command Center dashboard render with revenue/orders/operators=46/tools live=65 tiles and Recent Transactions table (including the freshly-created credit-pack checkout as 'Pro Pack $19.00 PENDING')."
+  ]
+}

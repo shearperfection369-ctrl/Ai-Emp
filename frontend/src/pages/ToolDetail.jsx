@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import api, { apiErr } from "../lib/api";
-import { Icon } from "../lib/icons";
+import { Icon, ToolIcon } from "../lib/icons";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import TierBadge from "../components/TierBadge";
@@ -74,9 +74,7 @@ export default function ToolDetail() {
         <div className="lg:col-span-2 space-y-8">
           <div className="animate-hud-in">
             <div className="flex items-start gap-5">
-              <div className="w-16 h-16 clip-hud-sm bg-[#00f0ff]/10 border border-[#00f0ff]/40 flex items-center justify-center glow-cyan shrink-0">
-                <Icon name={tool.icon} className="w-8 h-8 text-[#00f0ff]" />
-              </div>
+              <ToolIcon name={tool.icon} size="lg" />
               <div>
                 <div className="font-code text-[11px] tracking-[0.25em] uppercase text-[#8b9bb4]">{tool.category}</div>
                 <h1 className="font-display font-bold text-4xl text-white">{tool.name}</h1>

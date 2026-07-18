@@ -547,6 +547,29 @@ def get_bundle_by_lookup(lookup_key):
     return None
 
 
+# ------------------ AI Studio credit packs ------------------
+def _pack(slug, name, credits, price, badge=None):
+    return {
+        "slug": slug, "name": name, "credits": credits, "price": float(price),
+        "amount_cents": int(round(price * 100)), "lookup_key": f"credits_{slug}",
+        "tagline": f"{credits} AI Studio credits", "badge": badge, "is_credit_pack": True,
+    }
+
+
+CREDIT_PACKS = [
+    _pack("spark", "Spark Pack", 120, 9),
+    _pack("pro", "Pro Pack", 350, 19, "Best Value"),
+    _pack("studio", "Studio Pack", 800, 29, "Power User"),
+]
+
+
+def get_credit_pack_by_lookup(lookup_key):
+    for p in CREDIT_PACKS:
+        if p["lookup_key"] == lookup_key:
+            return p
+    return None
+
+
 # ------------------ Seed reviews (Consumer-Reports trust layer) ------------------
 SAMPLE_REVIEWS = {
     "neurocopy": [("Marcus T.", 5, "Cut our ad-writing time by 80%. The variants actually convert."),

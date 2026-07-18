@@ -6,6 +6,7 @@ load_dotenv(ROOT_DIR / ".env")
 
 import os
 import uuid
+import base64
 import logging
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional
@@ -20,9 +21,10 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, EmailStr, Field
 
 from emergentintegrations.llm.chat import LlmChat, UserMessage, TextDelta, StreamDone
+from emergentintegrations.llm.openai.image_generation import OpenAIImageGeneration
 
-from catalog import (CATALOG, CATEGORIES, BUNDLES, SAMPLE_REVIEWS, get_tool,
-                     get_tool_by_lookup, get_bundle, get_bundle_by_lookup)
+from catalog import (CATALOG, CATEGORIES, BUNDLES, SAMPLE_REVIEWS, CREDIT_PACKS, get_tool,
+                     get_tool_by_lookup, get_bundle, get_bundle_by_lookup, get_credit_pack_by_lookup)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("emporium")
@@ -41,6 +43,10 @@ app = FastAPI()
 api = APIRouter(prefix="/api")
 
 SESSION_DAYS = 7
+FREE_CREDITS = 30
+# Credit costs per generation. Priced so even the cheapest bulk pack ($0.036/credit)
+# keeps a ~3.4x+ markup over worst-case Universal Key cost (text $0.02, research $0.04, image $0.16).
+STUDIO_COST = {"text": 2, "research": 4, "image": 15}
 
 
 # ----------------------------- Models -----------------------------
@@ -99,6 +105,7 @@ def public_user(u: dict) -> dict:
         "role": u.get("role", "user"),
         "picture": u.get("picture"),
         "auth_provider": u.get("auth_provider", "password"),
+        "credits": u.get("credits", FREE_CREDITS),
     }
 
 
@@ -174,7 +181,8 @@ async def register(body: RegisterRequest, response: Response):
     await db.users.insert_one({
         "user_id": user_id, "email": email, "name": body.name,
         "password_hash": hash_password(body.password), "role": "user",
-        "auth_provider": "password", "created_at": datetime.now(timezone.utc),
+        "auth_provider": "password", "credits": FREE_CREDITS,
+        "created_at": datetime.now(timezone.utc),
     })
     token = await create_session(user_id)
     set_session_cookie(response, token)
@@ -216,7 +224,7 @@ async def google_session(request: Request, response: Response):
         await db.users.insert_one({
             "user_id": user_id, "email": email, "name": data.get("name", ""),
             "picture": data.get("picture"), "role": "user", "auth_provider": "google",
-            "created_at": datetime.now(timezone.utc),
+            "credits": FREE_CREDITS, "created_at": datetime.now(timezone.utc),
         })
     token = data.get("session_token") or (uuid.uuid4().hex + uuid.uuid4().hex)
     await db.user_sessions.insert_one({
@@ -336,6 +344,108 @@ async def add_review(slug: str, body: ReviewRequest, user: dict = Depends(get_cu
     return doc
 
 
+# ----------------------------- AI Studio (credit-metered) -----------------------------
+class StudioTextRequest(BaseModel):
+    mode: str = "chatgpt"
+    prompt: str
+
+
+class StudioImageRequest(BaseModel):
+    prompt: str
+
+
+class StudioResearchRequest(BaseModel):
+    query: str
+
+
+async def ensure_credits(user: dict) -> int:
+    if user.get("credits") is None:
+        await db.users.update_one({"user_id": user["user_id"]}, {"$set": {"credits": FREE_CREDITS}})
+        return FREE_CREDITS
+    return user["credits"]
+
+
+async def require_credits(user: dict, cost: int):
+    bal = await ensure_credits(user)
+    if bal < cost:
+        raise HTTPException(status_code=402, detail=f"Not enough credits — this needs {cost}, you have {bal}. Top up in the Studio.")
+
+
+async def spend_credits(user: dict, cost: int) -> int:
+    bal = await ensure_credits(user)
+    await db.users.update_one({"user_id": user["user_id"]}, {"$inc": {"credits": -cost}})
+    return bal - cost
+
+
+@api.get("/studio/credits")
+async def studio_credits(user: dict = Depends(get_current_user)):
+    return {"credits": await ensure_credits(user), "costs": STUDIO_COST}
+
+
+@api.get("/credit-packs")
+async def credit_packs():
+    return [{"slug": p["slug"], "name": p["name"], "credits": p["credits"], "price": p["price"],
+             "lookup_key": p["lookup_key"], "badge": p["badge"]} for p in CREDIT_PACKS]
+
+
+@api.post("/studio/text")
+async def studio_text(body: StudioTextRequest, user: dict = Depends(get_current_user)):
+    if not body.prompt.strip():
+        raise HTTPException(status_code=400, detail="Enter a prompt")
+    cost = STUDIO_COST["text"]
+    await require_credits(user, cost)
+    provider, model = ("openai", "gpt-5.4") if body.mode == "chatgpt" else ("anthropic", "claude-sonnet-4-6")
+    label = "ChatGPT (GPT-5.4)" if body.mode == "chatgpt" else "Claude Sonnet 4.6"
+    chat = LlmChat(api_key=EMERGENT_LLM_KEY, session_id=f"studio_text_{uuid.uuid4().hex[:8]}",
+                   system_message="You are a world-class writing, brainstorming and coding assistant. Be helpful, clear and well-structured.").with_model(provider, model)
+    try:
+        result = await chat.send_message(UserMessage(text=body.prompt.strip()))
+    except Exception:
+        logger.exception("studio text failed")
+        raise HTTPException(status_code=502, detail="AI engine unavailable, please retry")
+    remaining = await spend_credits(user, cost)
+    return {"output": result, "engine": label, "credits": remaining}
+
+
+@api.post("/studio/research")
+async def studio_research(body: StudioResearchRequest, user: dict = Depends(get_current_user)):
+    if not body.query.strip():
+        raise HTTPException(status_code=400, detail="Enter a research question")
+    cost = STUDIO_COST["research"]
+    await require_credits(user, cost)
+    chat = LlmChat(api_key=EMERGENT_LLM_KEY, session_id=f"studio_research_{uuid.uuid4().hex[:8]}",
+                   system_message=("You are a research analyst. Produce a structured synthesis: a concise TL;DR, "
+                                   "3-6 key points with brief explanations, and a short 'Consider this' section. "
+                                   "Be balanced and cite the type of source where relevant. Note that answers are "
+                                   "based on model knowledge and may not include the very latest events.")).with_model("openai", "gpt-5.4")
+    try:
+        result = await chat.send_message(UserMessage(text=body.query.strip()))
+    except Exception:
+        logger.exception("studio research failed")
+        raise HTTPException(status_code=502, detail="AI engine unavailable, please retry")
+    remaining = await spend_credits(user, cost)
+    return {"output": result, "credits": remaining}
+
+
+@api.post("/studio/image")
+async def studio_image(body: StudioImageRequest, user: dict = Depends(get_current_user)):
+    if not body.prompt.strip():
+        raise HTTPException(status_code=400, detail="Describe the image you want")
+    cost = STUDIO_COST["image"]
+    await require_credits(user, cost)
+    gen = OpenAIImageGeneration(api_key=EMERGENT_LLM_KEY)
+    try:
+        images = await gen.generate_images(prompt=body.prompt.strip(), model="gpt-image-1", number_of_images=1)
+    except Exception:
+        logger.exception("studio image failed")
+        raise HTTPException(status_code=502, detail="Image engine unavailable, please retry")
+    if not images:
+        raise HTTPException(status_code=502, detail="No image was generated, please retry")
+    b64 = base64.b64encode(images[0]).decode("utf-8")
+    remaining = await spend_credits(user, cost)
+    return {"image_base64": b64, "credits": remaining}
+
+
 # ----------------------------- AI: live demo (single-shot) -----------------------------
 @api.post("/tools/{slug}/demo")
 async def run_demo(slug: str, body: DemoRequest):
@@ -423,8 +533,15 @@ async def create_checkout(body: CheckoutRequest, request: Request):
         line_items.append({"price": price.id, "quantity": it.quantity})
         tool = get_tool_by_lookup(it.lookup_key)
         bundle = get_bundle_by_lookup(it.lookup_key)
+        pack = get_credit_pack_by_lookup(it.lookup_key)
         total_cents += (price.unit_amount or 0) * it.quantity
-        if bundle:
+        if pack:
+            resolved.append({
+                "slug": pack["slug"], "name": pack["name"], "lookup_key": it.lookup_key,
+                "price": (price.unit_amount or 0) / 100, "quantity": it.quantity,
+                "is_credit_pack": True, "credits": pack["credits"],
+            })
+        elif bundle:
             resolved.append({
                 "slug": bundle["slug"], "name": bundle["name"], "lookup_key": it.lookup_key,
                 "price": (price.unit_amount or 0) / 100, "quantity": it.quantity,
@@ -471,6 +588,19 @@ async def create_checkout(body: CheckoutRequest, request: Request):
     return {"checkout_url": session.url, "session_id": session.id}
 
 
+async def fulfill_transaction(session_id: str):
+    tx = await db.payment_transactions.find_one({"session_id": session_id})
+    if not tx or tx.get("fulfilled"):
+        return
+    total_credits = 0
+    for item in tx.get("items", []):
+        if item.get("is_credit_pack"):
+            total_credits += item.get("credits", 0) * item.get("quantity", 1)
+    if total_credits and tx.get("user_id"):
+        await db.users.update_one({"user_id": tx["user_id"]}, {"$inc": {"credits": total_credits}})
+    await db.payment_transactions.update_one({"session_id": session_id}, {"$set": {"fulfilled": True}})
+
+
 @api.get("/payments/status/{session_id}")
 async def payment_status(session_id: str):
     record = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
@@ -485,6 +615,7 @@ async def payment_status(session_id: str):
                     {"$set": {"status": "completed", "payment_status": "paid",
                               "stripe_payment_intent_id": s.payment_intent,
                               "updated_at": datetime.now(timezone.utc)}})
+                await fulfill_transaction(session_id)
                 record = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
         except stripe.error.StripeError:
             pass
@@ -508,6 +639,7 @@ async def stripe_webhook(request: Request):
             {"$set": {"status": "completed", "payment_status": obj.get("payment_status", "paid"),
                       "stripe_payment_intent_id": obj.get("payment_intent"),
                       "updated_at": datetime.now(timezone.utc)}})
+        await fulfill_transaction(obj["id"])
     elif t == "checkout.session.expired":
         await db.payment_transactions.update_one(
             {"session_id": obj["id"]},

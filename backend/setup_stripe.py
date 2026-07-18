@@ -6,7 +6,7 @@ load_dotenv(Path(__file__).parent / ".env")
 
 import os
 import stripe
-from catalog import CATALOG, BUNDLES
+from catalog import CATALOG, BUNDLES, CREDIT_PACKS
 
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY") or "sk_test_emergent"
 
@@ -66,7 +66,11 @@ def main():
         print(f"Bundle: {entry['name']}")
         product = get_or_create_product(entry)
         ensure_price(product, entry)
-    print("Done. Catalog + bundles synced to Stripe.")
+    for entry in CREDIT_PACKS:
+        print(f"Credit pack: {entry['name']}")
+        product = get_or_create_product(entry)
+        ensure_price(product, entry)
+    print("Done. Catalog + bundles + credit packs synced to Stripe.")
 
 
 if __name__ == "__main__":

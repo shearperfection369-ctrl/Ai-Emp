@@ -1,7 +1,7 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
-import { ShoppingCart, Zap, LogOut, LayoutDashboard, Library as LibIcon, Menu, X } from "lucide-react";
+import { ShoppingCart, Zap, LogOut, LayoutDashboard, Library as LibIcon, Menu, X, Coins } from "lucide-react";
 import { useState } from "react";
 
 export default function Navbar() {
@@ -13,6 +13,7 @@ export default function Navbar() {
 
   const links = [
     { to: "/marketplace", label: "Marketplace" },
+    { to: "/studio", label: "AI Studio" },
     { to: "/branding", label: "Brand Kit" },
   ];
 
@@ -70,6 +71,11 @@ export default function Navbar() {
 
           {user ? (
             <div className="hidden sm:flex items-center gap-2.5">
+              <Link to="/studio" data-testid="nav-credits" title="AI Studio credits"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 clip-hud-sm glass border border-[#ffb000]/40 hover:border-[#ffb000] transition-colors">
+                <Coins className="w-3.5 h-3.5 text-[#ffb000]" />
+                <span className="font-orbit font-bold text-sm text-[#ffb000]">{user.credits ?? 0}</span>
+              </Link>
               <div className="w-8 h-8 clip-hud-sm bg-[#00f0ff]/15 border border-[#00f0ff]/40 flex items-center justify-center font-display font-bold text-[#00f0ff] text-sm">
                 {(user.name || user.email || "U")[0].toUpperCase()}
               </div>

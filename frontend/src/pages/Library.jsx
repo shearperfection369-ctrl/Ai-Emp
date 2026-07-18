@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../lib/api";
-import { Icon } from "../lib/icons";
+import { Icon, ToolIcon } from "../lib/icons";
 import { useAuth } from "../context/AuthContext";
 import { Package, ArrowRight, Loader2 } from "lucide-react";
 
@@ -35,9 +35,7 @@ export default function Library() {
             <Link to={`/tool/${t.slug}`} key={t.slug} data-testid={`library-tool-${t.slug}`}
               className="glass clip-hud p-6 hover:border-[#00f0ff]/60 hover:glow-cyan transition-all hover:-translate-y-1 animate-hud-in" style={{ animationDelay: `${i * 60}ms` }}>
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 clip-hud-sm bg-[#00f0ff]/10 border border-[#00f0ff]/40 flex items-center justify-center glow-cyan">
-                  <Icon name={t.icon} className="w-6 h-6 text-[#00f0ff]" />
-                </div>
+                <ToolIcon name={t.icon} />
                 <span className="font-code text-[10px] tracking-widest uppercase px-2 py-1 clip-hud-sm bg-[#00f0ff]/15 text-[#00f0ff] border border-[#00f0ff]/40">OWNED</span>
               </div>
               <h3 className="font-display font-bold text-xl text-white">{t.name}</h3>
